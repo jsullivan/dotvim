@@ -1,5 +1,5 @@
 " ragtag.vim - Ghetto XML/HTML mappings (formerly allml.vim)
-" Author:       Tim Pope <vimNOSPAM@tpope.org>
+" Author:       Tim Pope <http://tpo.pe/>
 " Version:      2.0
 " GetLatestVimScripts: 1896 1 :AutoInstall: ragtag.vim
 
@@ -11,8 +11,9 @@ let g:loaded_ragtag = 1
 if has("autocmd")
   augroup ragtag
     autocmd!
-    autocmd FileType *html*,wml,xml,xslt,xsd,jsp    call s:Init()
+    autocmd FileType *html*,wml,jsp,mustache,smarty call s:Init()
     autocmd FileType php,asp*,cf,mason,eruby,liquid call s:Init()
+    autocmd FileType xml,xslt,xsd,docbk,jst         call s:Init()
     if version >= 700
       autocmd InsertLeave * call s:Leave()
     endif
@@ -34,7 +35,7 @@ endfunction
 function! s:Init()
   let b:loaded_ragtag = 1
   inoremap <silent> <buffer> <SID>xmlversion  <?xml version="1.0" encoding="<C-R>=toupper(<SID>charset())<CR>"?>
-  inoremap      <buffer> <SID>htmltrans   <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+  inoremap      <buffer> <SID>html5       <!DOCTYPE html>
   inoremap      <buffer> <SID>xhtmltrans  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
   if s:subtype() == "xml"
     imap <script> <buffer> <SID>doctype <SID>xmlversion
@@ -43,17 +44,17 @@ function! s:Init()
   elseif s:subtype() == "xhtml"
     imap <script> <buffer> <SID>doctype <SID>xhtmltrans
   else
-    imap <script> <buffer> <SID>doctype <SID>htmltrans
+    imap <script> <buffer> <SID>doctype <SID>html5
   endif
   imap <script> <buffer> <C-X>! <SID>doctype
 
-  imap <silent> <buffer> <C-X># <meta http-equiv="Content-Type" content="text/html; charset=<C-R>=<SID>charset()<CR>"<C-R>=<SID>closetag()<CR>
+  imap <silent> <buffer> <C-X># <C-R>=<SID>charsetTag()<CR>
   inoremap <silent> <buffer> <SID>HtmlComplete <C-R>=<SID>htmlEn()<CR><C-X><C-O><C-P><C-R>=<SID>htmlDis()<CR><C-N>
   imap     <buffer> <C-X>H <SID>HtmlComplete
   inoremap <silent> <buffer> <C-X>$ <C-R>=<SID>javascriptIncludeTag()<CR>
   inoremap <silent> <buffer> <C-X>@ <C-R>=<SID>stylesheetTag()<CR>
-  inoremap <silent> <buffer> <C-X><Space> <Esc>ciw<Lt><C-R>"<C-R>=<SID>tagextras()<CR>></<C-R>"><Esc>b2hi
-  inoremap <silent> <buffer> <C-X><CR> <Esc>ciw<Lt><C-R>"<C-R>=<SID>tagextras()<CR>><CR></<C-R>"><Esc>O
+  inoremap <silent> <buffer> <C-X><Space> <Esc>ciW<Lt><C-R>"<C-R>=<SID>tagextras()<CR>></<C-R>"><Esc>F<i
+  inoremap <silent> <buffer> <C-X><CR> <Esc>ciW<Lt><C-R>"<C-R>=<SID>tagextras()<CR>><CR></<C-R>"><Esc>O
   if exists("&omnifunc")
     inoremap <silent> <buffer> <C-X>/ <Lt>/<C-R>=<SID>htmlEn()<CR><C-X><C-O><C-R>=<SID>htmlDis()<CR><C-F>
     if exists(":XMLns")
@@ -70,9 +71,9 @@ function! s:Init()
   if &ft == "php"
     inoremap <buffer> <C-X><Lt> <?php
     inoremap <buffer> <C-X>>    ?>
-    inoremap <buffer> <SID>ragtagOopen    <?php<Space>print<Space>
+    inoremap <buffer> <SID>ragtagOopen    <?php<Space>echo<Space>
     let b:surround_45 = "<?php \r ?>"
-    let b:surround_61 = "<?php print \r ?>"
+    let b:surround_61 = "<?php echo \r ?>"
   elseif &ft == "htmltt" || &ft == "tt2html"
     inoremap <buffer> <C-X><Lt> [%
     inoremap <buffer> <C-X>>    %]
@@ -81,7 +82,14 @@ function! s:Init()
     if !exists("b:surround_101")
       let b:surround_101 = "[% \r %]\n[% END %]"
     endif
-  elseif &ft =~ "django" || &ft == "liquid"
+  elseif &ft == "mustache"
+    inoremap <buffer> <SID>ragtagOopen    {{<Space>
+    inoremap <buffer> <SID>ragtagOclose   <Space>}}<Left><Left>
+    inoremap <buffer> <C-X><Lt> {{
+    inoremap <buffer> <C-X>>    }}
+    let b:surround_45 = "{{ \r }}"
+    let b:surround_61 = "{{ \r }}"
+  elseif &ft =~ "django" || &ft == "liquid" || &ft == 'htmljinja'
     inoremap <buffer> <SID>ragtagOopen    {{<Space>
     inoremap <buffer> <SID>ragtagOclose   <Space>}}<Left><Left>
     inoremap <buffer> <C-X><Lt> {%
@@ -102,6 +110,13 @@ function! s:Init()
     inoremap <buffer> <C-X>>    >
     let b:surround_45 = "<cf\r>"
     let b:surround_61 = "<cfoutput>\r</cfoutput>"
+  elseif &ft =~ '\<smarty\>'
+    inoremap <buffer> <SID>ragtagOopen    {
+    inoremap <buffer> <SID>ragtagOclose   }
+    inoremap <buffer> <C-X><Lt> {
+    inoremap <buffer> <C-X>>    }
+    let b:surround_45 = "{\r}"
+    let b:surround_61 = "{\r}"
   else
     inoremap <buffer> <SID>ragtagOopen    <%=<Space>
     inoremap <buffer> <C-X><Lt> <%
@@ -117,17 +132,20 @@ function! s:Init()
   elseif &ft == "mason"
     inoremap <buffer> <C-X>] <%perl><CR></%perl><Esc>O
   elseif &ft == "html" || &ft == "xhtml" || &ft == "xml"
-    imap     <buffer> <C-X>] <script<Space>type="text/javascript"><CR></script><Esc>O
+    imap     <buffer> <C-X>] <script<C-R>=<SID>javascriptType()<CR>><CR></script><Esc>O
   else
     imap     <buffer> <C-X>] <C-X><Lt><CR><C-X>><Esc>O
   endif
   " <% %>
-  if &ft =~ '\<eruby\>'
-    inoremap  <buffer> <C-X>- <%<Space><Space>-%><Esc>3hi
-    inoremap  <buffer> <C-X>_ <C-V><NL><Esc>I<%<Space><Esc>A<Space>-%><Esc>F<NL>s
+  if &ft =~ '\<eruby\>' || &ft == "jst"
+    inoremap  <buffer> <C-X>- <%<Space><Space>%><Esc>2hi
+    inoremap  <buffer> <C-X>_ <C-V><NL><Esc>I<%<Space><Esc>A<Space>%><Esc>F<NL>s
   elseif &ft == "cf"
     inoremap  <buffer> <C-X>- <cf><Left>
     inoremap  <buffer> <C-X>_ <cfset ><Left>
+  elseif &ft =~ '\<smarty\>'
+    imap <buffer> <C-X>- <C-X><Lt><C-X>><Esc>i
+    imap <buffer> <C-X>_ <C-V><NL><Esc>I<C-X><Lt><Esc>A<C-X>><Esc>F<NL>s
   else
     imap <buffer> <C-X>- <C-X><Lt><Space><Space><C-X>><Esc>2hi
     imap <buffer> <C-X>_ <C-V><NL><Esc>I<C-X><Lt><Space><Esc>A<Space><C-X>><Esc>F<NL>s
@@ -150,7 +168,7 @@ function! s:Init()
     inoremap <buffer> <C-X>'     <Lt>!--<Space><Space>--><Esc>3hi
     inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<!--<Space><Esc>A<Space>--><Esc>F<NL>s
     let b:surround_35 = "<!-- \r -->"
-  elseif &ft == "django" || &ft == "htmldjango"
+  elseif &ft == "django" || &ft == "htmldjango" || &ft == 'htmljinja'
     inoremap <buffer> <C-X>'     {#<Space><Space>#}<Esc>2hi
     inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<C-X>{#<Space><Esc>A<Space>#}<Esc>F<NL>s
     let b:surround_35 = "{# \r #}"
@@ -158,6 +176,10 @@ function! s:Init()
     inoremap <buffer> <C-X>'     {%<Space>comment<Space>%}{%<Space>endcomment<Space>%}<Esc>15hi
     inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<C-X>{%<Space>comment<Space>%}<Esc>A{%<Space>endcomment<Space>%}<Esc>F<NL>s
     let b:surround_35 = "{% comment %}\r{% endcomment %}"
+  elseif &ft =~ '\<smarty\>'
+    inoremap <buffer> <C-X>'     {*<Space><Space>*}<Esc>2hi
+    inoremap <buffer> <C-X>"     <C-V><NL><Esc>I<C-X>{*<Space><Esc>A<Space>*}<Esc>F<NL>s
+    let b:surround_35 = "{* \r *}"
   else
     imap <buffer> <C-X>' <C-X><Lt>#<Space><Space><C-X>><Esc>2hi
     imap <buffer> <C-X>" <C-V><NL><Esc>I<C-X><Lt>#<Space><Esc>A<Space><C-X>><Esc>F<NL>s
@@ -174,14 +196,14 @@ function! s:Init()
       runtime! indent/html.vim
     endif
   endif
-  " Pet peeve.  Do people still not close their <p> and <li> tags?
   if exists("g:html_indent_tags") && g:html_indent_tags !~ '\\|p\>'
     let g:html_indent_tags = g:html_indent_tags.'\|p\|li\|dt\|dd'
+    let g:html_indent_tags = g:html_indent_tags.'\|article\|aside\|audio\|bdi\|canvas\|command\|datalist\|details\|figcaption\|figure\|footer\|header\|hgroup\|mark\|meter\|nav\|output\|progress\|rp\|rt\|ruby\|section\|summary\|time\|video'
   endif
   set indentkeys+=!^F
   let b:surround_indent = 1
+  silent doautocmd User Ragtag
   silent doautocmd User ragtag
-  silent doautocmd User allml
 endfunction
 
 function! s:Leave()
@@ -216,15 +238,31 @@ function! s:doctypeSeek()
   return (index < 0 ? s:repeat("\<C-P>",-index) : s:repeat("\<C-N>",index))
 endfunction
 
+function! s:stylesheetType()
+  if s:subtype() == 'html5'
+    return ''
+  else
+    return ' type="text/css"'
+  endif
+endfunction
+
 function! s:stylesheetTag()
   if !exists("b:ragtag_stylesheet_link_tag")
     if exists("b:allml_stylesheet_link_tag")
       let b:ragtag_stylesheet_link_tag = b:allml_stylesheet_link_tag
     else
-      let b:ragtag_stylesheet_link_tag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"/stylesheets/\r.css\" />"
+      let b:ragtag_stylesheet_link_tag = '<link rel="stylesheet"'.s:stylesheetType()." href=\"/stylesheets/\r.css\" />"
     endif
   endif
   return s:insertTag(b:ragtag_stylesheet_link_tag)
+endfunction
+
+function! s:javascriptType()
+  if s:subtype() == 'html5'
+    return ''
+  else
+    return ' type="text/javascript"'
+  endif
 endfunction
 
 function! s:javascriptIncludeTag()
@@ -232,7 +270,7 @@ function! s:javascriptIncludeTag()
     if exists("b:allml_javascript_include_tag")
       let b:ragtag_javascript_include_tag = b:allml_javascript_include_tag
     else
-      let b:ragtag_javascript_include_tag = "<script type=\"text/javascript\" src=\"/javascripts/\r.js\"></script>"
+      let b:ragtag_javascript_include_tag = '<script'.s:javascriptType()." src=\"/javascripts/\r.js\"></script>"
     endif
   endif
   return s:insertTag(b:ragtag_javascript_include_tag)
@@ -273,16 +311,18 @@ endfunction
 
 function! s:subtype()
   let top = getline(1)."\n".getline(2)
-  if (top =~ '<?xml\>' && &ft !~? 'html') || &ft =~? '^\%(xml\|xsd\|xslt\)$'
+  if (top =~ '<?xml\>' && &ft !~? 'html') || &ft =~? '^\%(xml\|xsd\|xslt\|docbk\)$'
     return "xml"
   elseif top =~? '\<xhtml\>'
     return 'xhtml'
-  elseif top =~ '[^<]\<html\>'
+  elseif top =~? '<!DOCTYPE html>'
+    return 'html5'
+  elseif top =~? '[^<]\<html\>'
     return "html"
-  elseif &ft == "xhtml" || &ft == '\<eruby\>'
+  elseif &ft == "xhtml"
     return "xhtml"
   elseif exists("b:loaded_ragtag")
-    return "html"
+    return "html5"
   else
     return ""
   endif
@@ -318,6 +358,14 @@ function! s:charset()
   endif
 endfunction
 
+function! s:charsetTag()
+  if s:subtype() == 'html5'
+    return '<meta charset="'.s:charset().'"'.s:closetag()
+  else
+    return '<meta http-equiv="Content-Type" content="text/html; charset='.s:charset().'"'.s:closetag()
+  endif
+endfunction
+
 function! s:tagextras()
   if s:subtype() == "xml"
     return ""
@@ -328,9 +376,9 @@ function! s:tagextras()
     endif
     return ' xmlns="http://www.w3.org/1999/xhtml" lang="'.lang.'" xml:lang="'.lang.'"'
   elseif @" == 'style'
-    return ' type="text/css"'
+    return s:stylesheetType()
   elseif @" == 'script'
-    return ' type="text/javascript"'
+    return s:javascriptType()
   elseif @" == 'table'
     return ' cellspacing="0"'
   else

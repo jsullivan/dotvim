@@ -17,50 +17,6 @@ map <leader>] :bnext<CR>
 " shortcut to strip trailing whitespace
 map <leader>s :s/\s\+$//g<CR>
 
-" Replicate textmate CMD-[ and CMD-] for indentation
-nmap <D-[> <<
-nmap <D-]> >>
-vmap <D-[> <gv
-vmap <D-]> >gv
-
-" Replicate textmate shift arrow/movement in order to select stuff
-nmap <S-up> vk
-vmap <S-up> k
-nmap <S-k> vk
-vmap <S-k> k
-
-nmap <S-right> vl
-vmap <S-right> l
-nmap <S-l> vl
-vmap <S-l> l
-
-nmap <S-down> vj
-vmap <S-down> j
-nmap <S-j> vj
-vmap <S-j> j
-
-nmap <S-left> v
-vmap <S-left> h
-nmap <S-h> vh
-vmap <S-h> h
-
-" use command+r to execute my ruby code
-nmap <D-r> :!ruby %<CR>
-
 " retab the document (tabs to spaces)
 nmap <silent> <leader><S-t> :retab!<CR>
 
-" Command-Option-ArrowKey to switch viewports (Taken from Carlhuda's Janus repo)
- map <D-M-Up> <C-w>k
- imap <D-M-Up> <Esc> <C-w>k
- map <D-M-Down> <C-w>j
- imap <D-M-Down> <Esc> <C-w>j
- map <D-M-Right> <C-w>l
- imap <D-M-Right> <Esc> <C-w>l
- map <D-M-Left> <C-w>h
- imap <D-M-Left> <C-w>h
-
-" Command-T for CommandT (Taken from Carlhuda's Janus repo)
- macmenu &File.New\ Tab key=<D-T>
- map <D-t> :CommandT<CR>
- imap <D-t> <Esc>:CommandT<CR>
